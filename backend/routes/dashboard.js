@@ -7,7 +7,8 @@ router.use(authenticate);
 
 router.get("/", async (req, res) => {
   try {
-    const projectIds = db.prepare("SELECT projectId FROM project_members WHERE userId = ?").all(req.user.id).map(r => r.projectId);
+    const memberRows = await db.prepare("SELECT projectId FROM project_members WHERE userId = ?").all(req.user.id);
+    const projectIds = memberRows.map(r => r.projectId);
 
     const projectCount = projectIds.length;
     if (projectCount === 0) {
@@ -27,22 +28,22 @@ router.get("/", async (req, res) => {
 
     const placeholders = projectIds.map(() => "?").join(",");
 
-    const totalTasks = db.prepare(`SELECT COUNT(*) as count FROM tasks WHERE projectId IN (${placeholders})`).get(...projectIds).count;
-    const todoTasks = db.prepare(`SELECT COUNT(*) as count FROM tasks WHERE projectId IN (${placeholders}) AND status = 'todo'`).get(...projectIds).count;
-    const inProgressTasks = db.prepare(`SELECT COUNT(*) as count FROM tasks WHERE projectId IN (${placeholders}) AND status = 'in_progress'`).get(...projectIds).count;
-    const reviewTasks = db.prepare(`SELECT COUNT(*) as count FROM tasks WHERE projectId IN (${placeholders}) AND status = 'review'`).get(...projectIds).count;
-    const doneTasks = db.prepare(`SELECT COUNT(*) as count FROM tasks WHERE projectId IN (${placeholders}) AND status = 'done'`).get(...projectIds).count;
+    const totalTasks = (await db.prepare(`SELECT COUNT(*) as count FROM tasks WHERE projectId IN (${placeholders})`).get(...projectIds)).count;
+    const todoTasks = (await db.prepare(`SELECT COUNT(*) as count FROM tasks WHERE projectId IN (${placeholders}) AND status = 'todo'`).get(...projectIds)).count;
+    const inProgressTasks = (await db.prepare(`SELECT COUNT(*) as count FROM tasks WHERE projectId IN (${placeholders}) AND status = 'in_progress'`).get(...projectIds)).count;
+    const reviewTasks = (await db.prepare(`SELECT COUNT(*) as count FROM tasks WHERE projectId IN (${placeholders}) AND status = 'review'`).get(...projectIds)).count;
+    const doneTasks = (await db.prepare(`SELECT COUNT(*) as count FROM tasks WHERE projectId IN (${placeholders}) AND status = 'done'`).get(...projectIds)).count;
 
-    const overdueTasks = db.prepare(
+    const overdueTasks = (await db.prepare(
       `SELECT COUNT(*) as count FROM tasks WHERE projectId IN (${placeholders}) AND dueDate IS NOT NULL AND dueDate < datetime('now') AND status != 'done'`
-    ).get(...projectIds).count;
+    ).get(...projectIds)).count;
 
-    const myTasks = db.prepare(
+    const myTasks = await db.prepare(
       `SELECT * FROM tasks WHERE projectId IN (${placeholders}) AND assignedTo = ? AND status != 'done' ORDER BY dueDate ASC LIMIT 10`
     ).all(...projectIds, req.user.id);
 
     for (const task of myTasks) {
-      task.project = db.prepare("SELECT id, name FROM projects WHERE id = ?").get(task.projectId);
+      task.project = await db.prepare("SELECT id, name FROM projects WHERE id = ?").get(task.projectId);
       delete task.projectId;
     }
 

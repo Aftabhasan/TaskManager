@@ -15,7 +15,7 @@ export async function authenticate(req, res, next) {
     }
     const token = header.split(" ")[1];
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = db.prepare("SELECT id, name, email, role, createdAt FROM users WHERE id = ?").get(decoded.userId);
+    const user = await db.prepare("SELECT id, name, email, role, createdAt FROM users WHERE id = ?").get(decoded.userId);
     if (!user) {
       return res.status(401).json({ error: "User not found" });
     }

@@ -20,16 +20,16 @@ router.post(
         return res.status(400).json({ error: errors.array()[0].msg });
       }
       const { name, email, password } = req.body;
-      const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
+      const existing = await db.prepare("SELECT id FROM users WHERE email = ?").get(email);
       if (existing) {
         return res.status(409).json({ error: "Email already in use" });
       }
       const hashed = await bcrypt.hash(password, 12);
-      const result = db.prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)").run(name, email, hashed);
-      const user = db.prepare("SELECT id, name, email, role, createdAt FROM users WHERE id = ?").get(result.lastInsertRowid);
+      const result = await db.prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)").run(name, email, hashed);
+      const user = await db.prepare("SELECT id, name, email, role, createdAt FROM users WHERE id = ?").get(result.lastInsertRowid);
       const token = generateToken(user.id);
       res.status(201).json({ user, token });
-    } catch (err) {
+    } catch {
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -48,7 +48,7 @@ router.post(
         return res.status(400).json({ error: errors.array()[0].msg });
       }
       const { email, password } = req.body;
-      const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+      const user = await db.prepare("SELECT * FROM users WHERE email = ?").get(email);
       if (!user || !(await bcrypt.compare(password, user.password))) {
         return res.status(401).json({ error: "Invalid email or password" });
       }
