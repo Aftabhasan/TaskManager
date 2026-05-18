@@ -20,7 +20,8 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
-const frontendDist = path.join(__dirname, "..", "frontend", "dist");
+const frontendDist = path.join(process.cwd(), "frontend", "dist");
+console.log("Frontend path:", frontendDist);
 app.use(express.static(frontendDist));
 app.get("*", (req, res) => {
   if (req.path.startsWith("/api")) return;
