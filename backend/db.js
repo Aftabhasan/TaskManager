@@ -12,7 +12,7 @@ const _db = new sqlite3.Database(dbPath);
 
 const init = new Promise((resolve, reject) => {
   _db.serialize(() => {
-   // _db.run("PRAGMA journal_mode = WAL");
+    _db.run("PRAGMA journal_mode = WAL");
     _db.run("PRAGMA foreign_keys = ON");
     _db.run(`
       CREATE TABLE IF NOT EXISTS users (
