@@ -20,12 +20,12 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
-//const frontendDist = path.join(__dirname, "..", "frontend", "dist");
-//app.use(express.static(frontendDist));
-//app.get("*", (req, res) => {
-  //if (req.path.startsWith("/api")) return;
-  //res.sendFile(path.join(frontendDist, "index.html"));
-//});
+const frontendDist = path.join(__dirname, "..", "frontend", "dist");
+app.use(express.static(frontendDist));
+app.get("*", (req, res) => {
+  if (req.path.startsWith("/api")) return;
+  res.sendFile(path.join(frontendDist, "index.html"));
+});
 
 app.use((err, req, res, next) => {
   console.error(err);
